@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<!-- non framed -->
+
+<head>
+  <title>~[text:psx.html.admin_students.newstudent.enroll_new_student]</title>
+
+  <style type="text/css" title="text/css">
+    <!--
+    headerrow {
+      border-width: 1pt;
+    }
+
+    -->
+
+  </style>
+  <script type="text/javascript">
+    <!--
+    function updatecheckbox() {
+      var putnamehere = document.getElementById("insertlastnamehere");
+      if (putnamehere !== null) {
+        var lastname = document.getElementById('last').value;
+        var newval = "";
+        if (lastname !== "") {
+          newval = "(" + lastname + ")";
+        }
+
+        putnamehere.innerHTML = newval;
+      }
+    }
+
+    //-->
+
+  </script>
+
+  <!-- TODO: marsmc begin -->
+  <script type="text/javascript">
+    var selectedAdapter = "~[displaypref:mappingadapter.selected]";
+    var mapKey = "~[x:selectedmappingadapterkey]";
+    var addrType = "p";
+
+  </script>
+  ~[x:renderboundaryobject]
+
+  <!--<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;~[x:selectedmappingadapterkey]" type="text/javascript"></script>-->
+  ~[get_js_texts:psx.js.admin_validation.validationCommon.]
+  <script language="JavaScript" src="/admin/validation/validationCommon.js"></script>
+
+</head>
+
+<body>
+<form id="studentEnrollmentForm" action="checkduplicatestudents.html" onsubmit="return validateStudentEnrollment()"
+      method="POST">
+  <div class="feedback-alert" id="studentInfo-Alerts" style="display: none;">
+    <ul>
+      <li id="student_needs_updating" style="display: none;">
+        This student is currently enrolled in an MCPS school. Unfortunately, you will need to wait until tomorrow to access their information.
+      </li>
+      <li id="student_already_exists" style="display: none;">
+        Student already exists
+      </li>
+      <li id="student_not_found" style="display: none;">
+        Student not found
+      </li>
+      <li id="school_not_selected" style="display: none;">
+        Please select a school to search for student.
+      </li>
+      <li id="student_number_empty" style="display: none;">
+        Please enter Student Number
+      </li>
+    </ul>
+  </div>
+  <script type="text/javascript">
+    function hideErrors() {
+      $j('#page-feedback-message').hide();
+      $j('#last_name_required_error').hide();
+      $j('#grade_level_required_error').hide();
+      $j('#invalid_enrollment_date_error').hide();
+      $j('#invalid_fte_error').hide();
+    }
+
+    hideErrors();
+
+  </script>
+  <!-- start of content and bounding box -->
+  <div class="box-round">
+    <table border="0" cellspacing="0" cellpadding="4" width="600">
+      <tr class="headerrow">
+        <td colspan="2" class="bold">
+          Find Student
+        </td>
+      </tr>
+      <tr>
+        <td class="bold">~[text:psx.html.admin_students.newstudent.student_number]</td>
+        <td>
+          <input type="text" id="fieldStuNum" name="student_number" ~[getValidation:students.student_number] value=""
+                 size="12"> Do not leave this field blank.
+          <button id="find_studentNumber_btn" type="button">Find</button>
+          <button id="clear_studentNumber_btn" type="button">Clear</button>
+        </td>
+      </tr>
+      <tr bgcolor="#edf3fe">
+        <td class="bold">
+          ~[text:psx.html.admin_students.newstudent.students_name]
+        </td>
+        <td>
+          <label id="student_name_lbl"></label>
+        </td>
+      </tr>
+      <tr>
+        <td class="bold">~[text:psx.html.admin_students.newstudent.enrollment_date]</td>
+        <td>
+          <label id="enrollment_date_lbl"></label>
+        </td>
+      </tr>
+      <tr bgcolor="#edf3fe">
+        <td class="bold">~[text:psx.html.admin_students.newstudent.grade_level]</td>
+        <td>
+          <label id="grade_level_lbl"></label>
+        </td>
+      </tr>
+      <tr>
+        <td class="bold">
+
+        </td>
+        <td>
+          <button id="fill_out_btn" type="button" disabled>
+            Fill out
+          </button>
+        </td>
+      </tr>
+
+    </table>
+
+      <script type="text/javascript">
+        function doValidate() {
+          document.getElementById("lastName").value = document.getElementById("last").value;
+          document.getElementById("firstName").value = document.getElementById("first").value;
+          document.getElementById("middleName").value = document.getElementById("middle").value;
+          openValidationWindow('p');
+        }
+
+        function validateStudentEnrollment() {
+          hideErrors();
+          var validated = true;
+          var last = $j('#last').val();
+          if (($j.trim(last)).length == 0) {
+            showError('#page-feedback-message');
+            showError('#last_name_required_error');
+            validated = false;
+          }
+          var gradeLevel = $j('select[name="grade_level"]').val();
+          if (($j.trim(gradeLevel)).length == 0) {
+            showError('#page-feedback-message');
+            showError('#grade_level_required_error');
+            validated = false;
+          }
+          var entryDate = $j('#entrydate').val();
+          if (($j.trim(entryDate)).length == 0) {
+            showError('#page-feedback-message');
+            showError('#invalid_enrollment_date_error');
+            validated = false;
+          }
+          var fteId = $j('select[name="fteid"]').val();
+          if (($j.trim(fteId)).length == 0 || fteId == "0") {
+            showError('#page-feedback-message');
+            showError('#invalid_fte_error');
+            validated = false;
+          }
+          if (validated) {
+            loadingDialog();
+            joinApartment(); //always returns true
+            return validated;
+          } else {
+            $j(document).scrollTop(0);
+            return validated;
+          }
+
+        }
+
+        function showError(errorId) {
+          $j(errorId).show();
+        }
+
+        function formatDate(date) {
+          var year = date.getFullYear(),
+            month = date.getMonth() + 1,
+            day = date.getDate(),
+            monthFormatted = month < 10 ? "0" + month : month,
+            dayFormatted = day < 10 ? "0" + day : day;
+
+          return monthFormatted + "/" + dayFormatted + "/" + year;
+        }
+
+        (function ($) {
+          var schoolid = '~(schoolid)';
+          var currentYearId = '~(curYearId)';
+          console.log('schoolid: ', schoolid);
+          console.log('Current year id: ', currentYearId);
+
+          $('#find_studentNumber_btn').on('click', function () {
+            clearResult();
+            $('button#fill_out_btn').unbind('click');
+            $('button#fill_out_btn').prop('disabled', true);
+
+            if (schoolid === '0') {
+              $("#studentInfo-Alerts").show();
+              $("#studentInfo-Alerts #school_not_selected").show();
+              return;
+            }
+            var studentNumber = $('#fieldStuNum').val();
+            if (!studentNumber) {
+              $("#studentInfo-Alerts").show();
+              $("#studentInfo-Alerts #student_number_empty").show();
+              return;
+            }
+
+            $.ajax({
+              url: 'prefs_diff/studentInfo_oasis.json?student_number=' + studentNumber + '&schoolId=' + schoolid,
+              dataType: 'json'
+            }).success(function (response) {
+              response.pop(); // remove the last empty record
+
+              if (response.length > 1) {
+                // order by WhenModified then reverse the order.
+                response = _.sortBy(response, function (r) {
+                  return new Date(r.WhenModified);
+                }).reverse();
+              }
+
+              console.log(response);
+
+              // this should be the latest one ordered by WhenModified field
+              var userInfo = response[0];
+
+              if (!userInfo) {
+                clearResult();
+                $("#studentInfo-Alerts").show();
+                $("#studentInfo-Alerts #student_not_found").show();
+                $("#studentInfo-Alerts #student_not_found").text('Student number not found: ' + studentNumber);
+                return;
+              }
+
+              // transfer is null and original is not
+              if (!userInfo.SCHOOL_ID_TRANSFER && !!userInfo.SCHOOL_ID_ORIGIN) {
+                clearResult();
+                $("#studentInfo-Alerts").show();
+                $("#studentInfo-Alerts #student_already_exists").show();
+                return;
+              }
+
+              // TODO: Update SCHOOLID (PS side) with SCHOOL_ID (OASIS side) if different.
+
+              if (userInfo.SCHOOL_ID_ORIGIN != "" && userInfo.SCHOOL_ID_ORIGIN != "null" && userInfo.SCHOOL_ID_ORIGIN != null) {
+                clearResult();
+                $("#studentInfo-Alerts").show();
+                $("#studentInfo-Alerts #student_needs_updating").show();
+                return;
+              }
+
+              var enrollmentDate = new Date(userInfo.ENROLLMENT_DATE);
+
+              // rendering the information as labels
+              $('#student_name_lbl').text(userInfo.LAST_NAME + ', ' + userInfo.PREFERRED_NAME);
+              $('#enrollment_date_lbl').text(formatDate(enrollmentDate));
+              $('#grade_level_lbl').text(userInfo.GRADE_LEVEL);
+
+
+              // fill up the inputs, needed for saving data
+              $('button#fill_out_btn').prop('disabled', null);
+              $('button#fill_out_btn').bind('click', function () {
+                $('input#last').val(userInfo.LAST_NAME);
+                $('input#first').val(userInfo.PREFERRED_NAME);
+                $('input#entrydate').val(formatDate(enrollmentDate));
+                $('input#student_number_readonly').val(userInfo.STUDENT_NUMBER_TRANSFER);
+                $('select[name="grade_level"]').val(userInfo.GRADE_LEVEL);
+                $('select[name="fteid"]').val(userInfo.FTE_ID);
+              });
+            });
+          });
+
+          $('#clear_studentNumber_btn').on('click', function () {
+            // remove event binding
+            $('button#fill_out_btn').unbind('click');
+            $('button#fill_out_btn').prop('disabled', true);
+
+
+            $('input#fieldStuNum').val(''); // clear the student number field;
+            clearResult();
+          });
+
+          function clearResult() {
+            $("#studentInfo-Alerts").hide();
+            $("#studentInfo-Alerts #student_needs_updating").hide();
+            $("#studentInfo-Alerts #student_already_exists").hide();
+            $("#studentInfo-Alerts #student_not_found").hide();
+            $("#studentInfo-Alerts #student_not_found").text('');
+            $("#studentInfo-Alerts #school_not_selected").hide();
+            $("#studentInfo-Alerts #student_number_empty").hide();
+            $('#student_name_lbl').text('');
+            $('#enrollment_date_lbl').text('');
+            $('#grade_level_lbl').text('');
+
+
+            $('input#last').val('');
+            $('input#first').val('');
+            $('input#entrydate').val('');
+            $('select[name="grade_level"]').val('');
+            $('select[name="fteid"]').val('');
+          }
+        })($j);
+
+[/if]
+<script type="text/javascript">
+  require(['recordexchange/main-min'], function (s) {
+    var o = new s({
+      module: 'RecordExchangeEnabled'
+    });
+    o.init();
+  });
+
+</script>
+</body>
+
+</html>
+<!-- non framed -->

@@ -1,0 +1,10 @@
+[
+  {
+    "ENROLLMENT_DATE": "01-01-1900",
+    "GRADE_LEVEL": "2",
+    "LAST_NAME": "Test",
+    "PREFERRED_NAME": "Test",
+    "SCHOOL_ID": "1234567",
+    "STUDENT_NUMBER": "111"
+  }
+]
